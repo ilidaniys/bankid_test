@@ -1,5 +1,8 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import styled from "styled-components";
+import axios from "axios";
+import QrCode from "./QrCode";
+import SVG from 'react-inlinesvg';
 
 const ButtonWrapper = styled.div`
   height: 14rem;
@@ -22,11 +25,69 @@ const Button = styled.div`
   }
 `
 const Login = () => {
+    const [login, setLogin] = useState(true)
+    const [authStatus, setAuthStatus] = useState("")
+    const [orderRef, setOrderRef] = useState("")
+
+    const [qrCode, setQrCode] = useState(null)
+
+    const LoginHandler = (event) => {
+        event.preventDefault()
+       axios.post('https://bankid-test-server.herokuapp.com/auth', {
+            personalNumber: "201701012393",
+            ip: "79.110.128.236"
+        })
+            .then(res => {
+                console.log("auth", res)
+                setOrderRef(res.data.orderRef)
+                axios.post('https://bankid-test-server.herokuapp.com/collect', {
+                    orderRef: res.data.orderRef
+                })
+                    .then(res => {
+                        console.log("orderRef", res)
+                    })
+                    .catch(e => {
+                        console.log(e)
+                    })
+                setAuthStatus("pending")
+
+            })
+            .catch(e => {
+                console.log(e)
+            })
+    }
+
+    useEffect(()=>{
+        if (authStatus === "pending"){
+            let time = 1
+            const timer = setInterval(() => {
+                console.log(time)
+                axios.post('https://bankid-test-server.herokuapp.com/qrcode', {
+                    orderRef,
+                    time
+                }).then(res => {
+                    // console.log("qrcode", res.data.qrcode)
+                    // const qrArray = res.data.qrcode.split(">")
+                    // const fixArray = qrArray.map(elem => {
+                    //     return `${elem}>`
+                    // })
+                    setQrCode(res.data.qrcode)
+                    console.log(res.data.qrcode)
+                    time++
+                })
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+
+    }, [authStatus, orderRef])
+
     return (
         <ButtonWrapper>
-            <Button>
-                Login
-            </Button>
+             {qrCode ?  <SVG src={qrCode} />
+                     :  <Button onClick={LoginHandler}>Login</Button>
+             }
+
+
         </ButtonWrapper>
     );
 };
