@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import styled from "styled-components";
 import axios from "axios";
-import QrCode from "./QrCode";
 import SVG from 'react-inlinesvg';
 
 const ButtonWrapper = styled.div`
@@ -34,8 +33,8 @@ const Login = () => {
     const LoginHandler = (event) => {
         event.preventDefault()
        axios.post('https://bankid-test-server.herokuapp.com/auth', {
-            personalNumber: "201701012393",
-            ip: "79.110.128.236"
+            // personalNumber: "201701042382",
+            ip: "94.100.212.217"
         })
             .then(res => {
                 console.log("auth", res)
@@ -62,15 +61,10 @@ const Login = () => {
             let time = 1
             const timer = setInterval(() => {
                 console.log(time)
-                axios.post('https://bankid-test-server.herokuapp.com/qrcode', {
+                axios.post('https://bankid-test-server.herokuapp.com/staticQR', {
                     orderRef,
                     time
                 }).then(res => {
-                    // console.log("qrcode", res.data.qrcode)
-                    // const qrArray = res.data.qrcode.split(">")
-                    // const fixArray = qrArray.map(elem => {
-                    //     return `${elem}>`
-                    // })
                     setQrCode(res.data.qrcode)
                     console.log(res.data.qrcode)
                     time++
